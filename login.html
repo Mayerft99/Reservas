@@ -158,11 +158,11 @@ input:focus {
 <script>
 const SUPABASE_URL = "https://atlpolnlgkoqlpixlsfy.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bHBvbG5sZ2tvcWxwaXhsc2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDI1MDgsImV4cCI6MjA5MTI3ODUwOH0.roz1-0RHaDPLq9tpLp_3vgJawJtx-CfK9avsZS34lgw";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   
 // Si ya hay sesión activa, ir directo al panel
 (async () => {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await sbClient.auth.getSession();
   if (data.session) window.location.href = "index.html";
 })();
 
@@ -180,7 +180,7 @@ async function login() {
 
   btnLogin.disabled = true;
   btnLogin.textContent = "Ingresando...";
-  errorMsg.classList.remove("visible");
+  const { error } = await sbClient.auth.signInWithPassword({ email, password });
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
