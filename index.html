@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservas PRO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Reservas <em>PRO</em></span>
+    </div>
+    <button class="toggle-sidebar" id="toggleSidebar" title="Ocultar panel">‹</button>
+  </div>
+
+  <section class="sidebar-section">
+    <p class="section-label">Nueva mesa</p>
+    <div class="form-group">
+      <input type="text" id="inputNombre" placeholder="Nombre de la mesa" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <select id="inputSector">
+        <option value="galeria">Galería</option>
+        <option value="terraza">Terraza</option>
+        <option value="ruta">Ruta</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group half">
+        <input type="number" id="inputAncho" placeholder="Ancho px" value="110">
+      </div>
+      <div class="form-group half">
+        <input type="number" id="inputAlto" placeholder="Alto px" value="70">
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btnCrear">+ Agregar mesa</button>
+  </section>
+
+  <section class="sidebar-section">
+    <p class="section-label">Filtrar sector</p>
+    <div class="filter-chips" id="filterChips">
+      <button class="chip active" data-sector="todos">Todos</button>
+      <button class="chip" data-sector="galeria">Galería</button>
+      <button class="chip" data-sector="terraza">Terraza</button>
+      <button class="chip" data-sector="ruta">Ruta</button>
+    </div>
+  </section>
+
+  <section class="sidebar-section">
+    <p class="section-label">Leyenda</p>
+    <div class="legend">
+      <span class="legend-item"><span class="dot libre"></span>Libre</span>
+      <span class="legend-item"><span class="dot espera"></span>En espera</span>
+      <span class="legend-item"><span class="dot reservada"></span>Reservada</span>
+    </div>
+  </section>
+
+  <section class="sidebar-section stats-section">
+    <p class="section-label">Estado actual</p>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-num" id="statLibre">0</span>
+        <span class="stat-label">Libres</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num espera" id="statEspera">0</span>
+        <span class="stat-label">En espera</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num reservada" id="statReservada">0</span>
+        <span class="stat-label">Reservadas</span>
+      </div>
+    </div>
+  </section>
+</aside>
+
+<main class="main-area">
+  <header class="topbar">
+    <button class="icon-btn" id="openSidebar" title="Abrir panel" style="display:none">☰</button>
+    <div class="topbar-info">
+      <span class="realtime-badge" id="realtimeBadge">● En vivo</span>
+      <span class="topbar-hint">Arrastra mesas · Click para cambiar estado · Clic derecho para eliminar</span>
+    </div>
+    <div class="topbar-user">
+      <span class="user-email" id="userEmail"></span>
+      <button class="btn btn-ghost" id="btnLimpiarTodo">Limpiar todo</button>
+      <button class="btn btn-logout" id="btnLogout">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div id="plano" class="plano">
+    <div class="plano-empty" id="planoEmpty">
+      <div class="empty-icon">⊞</div>
+      <p>No hay mesas. Crea una desde el panel.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Modal reserva -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Confirmar reserva</span>
+      <button class="icon-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-subtitle">Mesa: <strong id="modalMesaNombre"></strong></p>
+      <div class="form-group">
+        <input type="text" id="modalInputCliente" placeholder="Nombre del cliente" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modalCancelar">Cancelar</button>
+      <button class="btn btn-primary" id="modalConfirmar">Confirmar reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

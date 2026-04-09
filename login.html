@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservas PRO — Iniciar sesión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0b0f1a;
+  --bg2:      #111827;
+  --bg3:      #1c2538;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #e8edf5;
+  --text2:    #8a98b0;
+  --text3:    #576073;
+  --accent:   #6366f1;
+  --accent-h: #4f52d9;
+  --danger:   #ef4444;
+  --radius:   10px;
+  --radius-sm:6px;
+  --font:     'DM Sans', system-ui, sans-serif;
+}
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.2);
+}
+.brand-name {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.brand-name em { font-style: normal; color: var(--accent); }
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.subtitle {
+  font-size: 13.5px;
+  color: var(--text2);
+  margin-bottom: 28px;
+}
+.form-group { margin-bottom: 14px; }
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.15s;
+}
+input::placeholder { color: var(--text3); }
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+.btn-submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-submit:hover { background: var(--accent-h); }
+.btn-submit:active { transform: scale(0.98); }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.error-msg {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: var(--radius-sm);
+  color: #fca5a5;
+  font-size: 13px;
+  display: none;
+}
+.error-msg.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <span class="brand-name">Reservas <em>PRO</em></span>
+  </div>
+
+  <h1>Iniciar sesión</h1>
+  <p class="subtitle">Ingresá tus credenciales para continuar.</p>
+
+  <div class="form-group">
+    <label for="email">Correo electrónico</label>
+    <input type="email" id="email" placeholder="usuario@ejemplo.com" autocomplete="email">
+  </div>
+
+  <div class="form-group">
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+
+  <button class="btn-submit" id="btnLogin">Entrar</button>
+
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://atlpolnlgkoqlpixlsfy.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bHBvbG5sZ2tvcWxwaXhsc2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MDI1MDgsImV4cCI6MjA5MTI3ODUwOH0.roz1-0RHaDPLq9tpLp_3vgJawJtx-CfK9avsZS34lgw";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Si ya hay sesión activa, ir directo al panel
+(async () => {
+  const { data } = await supabase.auth.getSession();
+  if (data.session) window.location.href = "index.html";
+})();
+
+const btnLogin  = document.getElementById("btnLogin");
+const errorMsg  = document.getElementById("errorMsg");
+
+async function login() {
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    mostrarError("Completá todos los campos.");
+    return;
+  }
+
+  btnLogin.disabled = true;
+  btnLogin.textContent = "Ingresando...";
+  errorMsg.classList.remove("visible");
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    mostrarError("Credenciales incorrectas. Intentá de nuevo.");
+    btnLogin.disabled = false;
+    btnLogin.textContent = "Entrar";
+    return;
+  }
+
+  window.location.href = "index.html";
+}
+
+function mostrarError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add("visible");
+}
+
+btnLogin.addEventListener("click", login);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") login();
+});
+</script>
+</body>
+</html>
