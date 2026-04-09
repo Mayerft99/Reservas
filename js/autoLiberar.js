@@ -8,18 +8,10 @@ const INTERVALO_MS      = 60_000;
 
 let ultimasMesas = [];
 
-/**
- * Actualiza la referencia a la lista de mesas para que el auto-liberador
- * siempre trabaje con los datos más recientes.
- * @param {Array} mesas
- */
 export function actualizarRefMesas(mesas) {
   ultimasMesas = mesas;
 }
 
-/**
- * Inicia el ciclo periódico de auto-liberación.
- */
 export function iniciarAutoLiberar() {
   setInterval(async () => {
     const ahora = Date.now();

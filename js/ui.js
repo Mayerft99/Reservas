@@ -4,12 +4,6 @@
 
 const toastContainer = document.getElementById("toastContainer");
 
-/**
- * Muestra una notificación temporal.
- * @param {string} message  Texto a mostrar
- * @param {'info'|'success'|'warning'|'danger'} type
- * @param {number} duration  Milisegundos (default 3000)
- */
 export function toast(message, type = "info", duration = 3000) {
   const el = document.createElement("div");
   el.className = `toast ${type}`;
@@ -31,8 +25,27 @@ const inputCliente = document.getElementById("modalInputCliente");
 const btnConfirmar = document.getElementById("modalConfirmar");
 const btnCancelar  = document.getElementById("modalCancelar");
 const btnClose     = document.getElementById("modalClose");
+const personasNum  = document.getElementById("personasNum");
+const btnMenos     = document.getElementById("personasMenos");
+const btnMas       = document.getElementById("personasMas");
 
 let resolveModal = null;
+let personasActual = 2;
+
+// Control de personas
+btnMenos.addEventListener("click", () => {
+  if (personasActual > 1) {
+    personasActual--;
+    personasNum.textContent = personasActual;
+  }
+});
+
+btnMas.addEventListener("click", () => {
+  if (personasActual < 20) {
+    personasActual++;
+    personasNum.textContent = personasActual;
+  }
+});
 
 function cerrarModal(valor = null) {
   backdrop.classList.remove("open");
@@ -48,12 +61,15 @@ backdrop.addEventListener("click", (e) => {
 /**
  * Abre el modal de confirmación de reserva.
  * @param {string} nombreMesa
- * @returns {Promise<string|null>} Nombre del cliente o null si se canceló
+ * @param {number} capacidadDefault  Capacidad sugerida de la mesa
+ * @returns {Promise<{cliente: string, personas: number}|null>}
  */
-export function abrirModalReserva(nombreMesa) {
+export function abrirModalReserva(nombreMesa, capacidadDefault = 2) {
   modalTitle.textContent = "Confirmar reserva";
   mesaNombre.textContent = nombreMesa;
   inputCliente.value     = "";
+  personasActual = capacidadDefault;
+  personasNum.textContent = personasActual;
 
   backdrop.classList.add("open");
   setTimeout(() => inputCliente.focus(), 200);
@@ -69,13 +85,12 @@ export function abrirModalReserva(nombreMesa) {
         setTimeout(() => (inputCliente.style.borderColor = ""), 800);
         return;
       }
-      cerrarModal(nombre);
+      cerrarModal({ cliente: nombre, personas: personasActual });
       btnConfirmar.removeEventListener("click", handler);
     };
 
     btnConfirmar.addEventListener("click", handler);
 
-    // Enter para confirmar
     inputCliente.onkeydown = (e) => {
       if (e.key === "Enter") handler();
     };
