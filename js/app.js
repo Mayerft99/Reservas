@@ -1,4 +1,4 @@
-// ── app.js — Orquestador principal ────────────────────────────────────────────
+// ── app.js ────────────────────────────────────────────────────────────────────
 
 import { fetchMesas, crearMesa, suscribirCambios, verificarSesion, obtenerUsuario, logout, eliminarMesa } from "./db.js";
 import { renderMesas, setUserId, setRestauranteActivo, inicializarCroquis } from "./mesa.js";
@@ -16,16 +16,14 @@ if (usuario) {
   if (emailEl) emailEl.textContent = usuario.email;
 }
 
-document.getElementById("btnLogout").addEventListener("click", async () => {
-  await logout();
-});
+document.getElementById("btnLogout").addEventListener("click", async () => await logout());
 
-// ── Estado local ──────────────────────────────────────────────────────────────
+// ── Estado ────────────────────────────────────────────────────────────────────
 
-let mesasCache       = [];
+let mesasCache        = [];
 let restauranteActivo = 1;
 
-// ── Inicializar croquis ───────────────────────────────────────────────────────
+// ── Croquis ───────────────────────────────────────────────────────────────────
 
 inicializarCroquis();
 
@@ -37,30 +35,26 @@ async function cargar() {
     renderMesas(mesasCache);
     actualizarRefMesas(mesasCache);
   } catch (err) {
-    console.error("Error al cargar mesas:", err);
+    console.error(err);
     toast("Error al cargar mesas", "danger");
   }
 }
 
-// ── Selector de restaurante ───────────────────────────────────────────────────
+// ── Selector restaurante ──────────────────────────────────────────────────────
 
 document.getElementById("restauranteTabs").addEventListener("click", (e) => {
   const tab = e.target.closest(".rtab");
   if (!tab) return;
-
   document.querySelectorAll(".rtab").forEach((t) => t.classList.remove("active"));
   tab.classList.add("active");
-
   restauranteActivo = Number(tab.dataset.rest);
   setRestauranteActivo(restauranteActivo);
-
   const label = document.getElementById("restauranteLabel");
   if (label) label.textContent = `Restaurante ${restauranteActivo}`;
-
   renderMesas(mesasCache);
 });
 
-// ── Sidebar toggle ────────────────────────────────────────────────────────────
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 
 const sidebar   = document.getElementById("sidebar");
 const btnToggle = document.getElementById("toggleSidebar");
@@ -70,7 +64,6 @@ btnToggle.addEventListener("click", () => {
   sidebar.classList.add("collapsed");
   btnOpen.style.display = "inline-flex";
 });
-
 btnOpen.addEventListener("click", () => {
   sidebar.classList.remove("collapsed");
   btnOpen.style.display = "none";
@@ -89,21 +82,16 @@ document.getElementById("btnCrear").addEventListener("click", async () => {
     return;
   }
 
-  // Calcular próximo slot libre en ese sector para este restaurante
+  const LIMITES = { ruta: 6, galeria: 9, salon: 9 };
   const mesasSector = mesasCache.filter(
     (m) => m.sector === sector && (m.restaurante || 1) === restauranteActivo
   );
 
-  // Límites de celdas por sector
-  const LIMITES = { ruta: 6, galeria: 9, salon: 9 };
-  const limite  = LIMITES[sector] || 9;
-
-  if (mesasSector.length >= limite) {
-    toast(`El sector ${sector} ya está completo (${limite} mesas máx.)`, "warning");
+  if (mesasSector.length >= (LIMITES[sector] || 9)) {
+    toast(`El sector ${sector} está completo`, "warning");
     return;
   }
 
-  // Encontrar slot disponible
   const slotsUsados = new Set(mesasSector.map((m) => m.slot ?? 0));
   let slotLibre = 0;
   while (slotsUsados.has(slotLibre)) slotLibre++;
@@ -111,7 +99,7 @@ document.getElementById("btnCrear").addEventListener("click", async () => {
   try {
     await crearMesa({ nombre, sector, capacidad, slot: slotLibre, restaurante: restauranteActivo });
     document.getElementById("inputNombre").value = "";
-    toast(`Mesa "${nombre}" creada en ${sector}`, "success");
+    toast(`Mesa "${nombre}" creada`, "success");
   } catch (err) {
     toast("Error al crear mesa", "danger");
     console.error(err);
@@ -122,27 +110,18 @@ document.getElementById("inputNombre").addEventListener("keydown", (e) => {
   if (e.key === "Enter") document.getElementById("btnCrear").click();
 });
 
-// ── Limpiar todo (solo restaurante activo) ────────────────────────────────────
+// ── Limpiar todo ──────────────────────────────────────────────────────────────
 
 document.getElementById("btnLimpiarTodo").addEventListener("click", async () => {
   const ok = confirm(`¿Eliminar TODAS las mesas del Restaurante ${restauranteActivo}?`);
   if (!ok) return;
-
   const mesasRest = mesasCache.filter((m) => (m.restaurante || 1) === restauranteActivo);
-  for (const m of mesasRest) {
-    await eliminarMesa(m.id);
-  }
+  for (const m of mesasRest) await eliminarMesa(m.id);
   toast(`Restaurante ${restauranteActivo} limpiado`, "info");
 });
 
-// ── Realtime ──────────────────────────────────────────────────────────────────
+// ── Realtime + auto-liberar ───────────────────────────────────────────────────
 
 suscribirCambios(cargar);
-
-// ── Auto-liberar ──────────────────────────────────────────────────────────────
-
 iniciarAutoLiberar();
-
-// ── Iniciar ───────────────────────────────────────────────────────────────────
-
 cargar();

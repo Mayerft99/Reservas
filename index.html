@@ -21,7 +21,6 @@
     <button class="toggle-sidebar" id="toggleSidebar" title="Ocultar panel">‹</button>
   </div>
 
-  <!-- Selector de restaurante -->
   <section class="sidebar-section">
     <p class="section-label">Restaurante</p>
     <div class="restaurante-tabs" id="restauranteTabs">
@@ -57,7 +56,7 @@
     </div>
   </section>
 
-  <section class="sidebar-section stats-section">
+  <section class="sidebar-section">
     <p class="section-label">Estado actual</p>
     <div class="stats-grid">
       <div class="stat-card">
@@ -78,11 +77,11 @@
 
 <main class="main-area">
   <header class="topbar">
-    <button class="icon-btn" id="openSidebar" title="Abrir panel" style="display:none">☰</button>
+    <button class="icon-btn" id="openSidebar" style="display:none">☰</button>
     <div class="topbar-info">
-      <span class="realtime-badge" id="realtimeBadge">● En vivo</span>
+      <span class="realtime-badge">● En vivo</span>
       <span class="restaurante-label" id="restauranteLabel">Restaurante 1</span>
-      <span class="topbar-hint">Click para cambiar estado · Clic derecho para eliminar</span>
+      <span class="topbar-hint">Click para reservar · Clic derecho para eliminar</span>
     </div>
     <div class="topbar-user">
       <span class="user-email" id="userEmail"></span>
@@ -91,47 +90,41 @@
     </div>
   </header>
 
-  <!-- Croquis estructurado por zonas -->
   <div class="croquis-wrapper">
-
-    <!-- ZONA: RUTA (2 filas × 3 cols) -->
     <div class="zona-bloque">
       <div class="zona-label-ext">RUTA</div>
-      <div class="zona zona-ruta" id="zona-ruta" data-sector="ruta" data-filas="2" data-cols="3">
-        <!-- celdas generadas por JS -->
-      </div>
+      <div class="zona zona-ruta" id="zona-ruta" data-sector="ruta"></div>
     </div>
-
-    <!-- ZONA: GALERÍA (3 filas × 3 cols) -->
     <div class="zona-bloque">
       <div class="zona-label-ext">GALERÍA</div>
-      <div class="zona zona-galeria" id="zona-galeria" data-sector="galeria" data-filas="3" data-cols="3">
-      </div>
+      <div class="zona zona-galeria" id="zona-galeria" data-sector="galeria"></div>
     </div>
-
-    <!-- ZONA: SALÓN (3 filas × 3 cols) -->
     <div class="zona-bloque">
       <div class="zona-label-ext">SALÓN</div>
-      <div class="zona zona-salon" id="zona-salon" data-sector="salon" data-filas="3" data-cols="3">
-      </div>
+      <div class="zona zona-salon" id="zona-salon" data-sector="salon"></div>
     </div>
-
   </div>
 </main>
 
 <!-- Modal reserva -->
 <div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal" id="modal">
+  <div class="modal">
     <div class="modal-header">
-      <span class="modal-title" id="modalTitle">Confirmar reserva</span>
+      <span class="modal-title">Confirmar reserva — <strong id="modalMesaNombre"></strong></span>
       <button class="icon-btn" id="modalClose">✕</button>
     </div>
     <div class="modal-body">
-      <p class="modal-subtitle">Mesa: <strong id="modalMesaNombre"></strong></p>
+
       <div class="form-group">
         <label class="modal-label">Nombre del cliente</label>
         <input type="text" id="modalInputCliente" placeholder="Ej: García" autocomplete="off">
       </div>
+
+      <div class="form-group">
+        <label class="modal-label">Teléfono</label>
+        <input type="tel" id="modalInputTel" placeholder="Ej: 70012345" autocomplete="off">
+      </div>
+
       <div class="form-group">
         <label class="modal-label">Cantidad de personas</label>
         <div class="personas-control">
@@ -140,6 +133,13 @@
           <button class="personas-btn" id="personasMas">+</button>
         </div>
       </div>
+
+      <!-- Unir mesas del mismo sector -->
+      <div id="unionSection" style="display:none">
+        <label class="modal-label">Unir con otras mesas del sector</label>
+        <div id="unionList" class="union-list"></div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="modalCancelar">Cancelar</button>
@@ -148,7 +148,6 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module" src="js/app.js"></script>
