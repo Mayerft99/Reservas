@@ -32,14 +32,20 @@ export async function fetchMesas() {
 
 export async function crearMesa({ nombre, sector, capacidad = 4, slot = 0, restaurante = 1 }) {
   const { error } = await db.from("mesas").insert({
-    nombre, sector, capacidad, slot, restaurante,
-    estado: "libre",
+    nombre, sector, capacidad, slot, restaurante, estado: "libre",
   });
   if (error) throw error;
 }
 
 export async function actualizarEstado(id, campos) {
   const { error } = await db.from("mesas").update(campos).eq("id", id);
+  if (error) throw error;
+}
+
+export async function actualizarSlot(id, slot, sector, restaurante) {
+  const { error } = await db.from("mesas")
+    .update({ slot, sector, restaurante })
+    .eq("id", id);
   if (error) throw error;
 }
 
@@ -55,6 +61,23 @@ export async function crearReserva({ mesa_id, nombre_cliente, usuario_id, person
     mesa_id, nombre_cliente, usuario_id, personas, telefono, grupo_id,
   });
   if (error) throw error;
+}
+
+// ── Config de sectores (filas/cols guardadas en localStorage) ─────────────────
+// Usamos localStorage para no necesitar tabla extra en Supabase.
+// Clave: "sectorConfig_rest{N}_{sector}" → { filas, cols }
+
+const DEFAULTS = { ruta: { filas: 2, cols: 3 }, galeria: { filas: 3, cols: 3 }, salon: { filas: 3, cols: 3 } };
+
+export function getSectorConfig(restaurante, sector) {
+  const key = `sectorConfig_rest${restaurante}_${sector}`;
+  const raw = localStorage.getItem(key);
+  return raw ? JSON.parse(raw) : { ...DEFAULTS[sector] };
+}
+
+export function setSectorConfig(restaurante, sector, filas, cols) {
+  const key = `sectorConfig_rest${restaurante}_${sector}`;
+  localStorage.setItem(key, JSON.stringify({ filas, cols }));
 }
 
 // ── Realtime ──────────────────────────────────────────────────────────────────

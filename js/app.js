@@ -1,21 +1,23 @@
 // ── app.js ────────────────────────────────────────────────────────────────────
 
-import { fetchMesas, crearMesa, suscribirCambios, verificarSesion, obtenerUsuario, logout, eliminarMesa } from "./db.js";
-import { renderMesas, setUserId, setRestauranteActivo, inicializarCroquis } from "./mesa.js";
+import {
+  fetchMesas, crearMesa, suscribirCambios,
+  verificarSesion, obtenerUsuario, logout, eliminarMesa,
+  getSectorConfig, setSectorConfig,
+} from "./db.js";
+import { renderMesas, setUserId, setRestauranteActivo, inicializarCroquis, reconstruirZona } from "./mesa.js";
 import { actualizarRefMesas, iniciarAutoLiberar } from "./autoLiberar.js";
 import { toast } from "./ui.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 await verificarSesion();
-
 const usuario = await obtenerUsuario();
 if (usuario) {
   setUserId(usuario.id);
   const emailEl = document.getElementById("userEmail");
   if (emailEl) emailEl.textContent = usuario.email;
 }
-
 document.getElementById("btnLogout").addEventListener("click", async () => await logout());
 
 // ── Estado ────────────────────────────────────────────────────────────────────
@@ -23,9 +25,10 @@ document.getElementById("btnLogout").addEventListener("click", async () => await
 let mesasCache        = [];
 let restauranteActivo = 1;
 
-// ── Croquis ───────────────────────────────────────────────────────────────────
+// ── Croquis inicial ───────────────────────────────────────────────────────────
 
-inicializarCroquis();
+inicializarCroquis(restauranteActivo);
+renderContadoresSector(restauranteActivo);
 
 // ── Carga ─────────────────────────────────────────────────────────────────────
 
@@ -51,22 +54,54 @@ document.getElementById("restauranteTabs").addEventListener("click", (e) => {
   setRestauranteActivo(restauranteActivo);
   const label = document.getElementById("restauranteLabel");
   if (label) label.textContent = `Restaurante ${restauranteActivo}`;
+  inicializarCroquis(restauranteActivo);
+  renderContadoresSector(restauranteActivo);
   renderMesas(mesasCache);
 });
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
+// ── Sidebar toggle ────────────────────────────────────────────────────────────
 
 const sidebar   = document.getElementById("sidebar");
 const btnToggle = document.getElementById("toggleSidebar");
 const btnOpen   = document.getElementById("openSidebar");
+btnToggle.addEventListener("click", () => { sidebar.classList.add("collapsed"); btnOpen.style.display = "inline-flex"; });
+btnOpen.addEventListener("click",   () => { sidebar.classList.remove("collapsed"); btnOpen.style.display = "none"; });
 
-btnToggle.addEventListener("click", () => {
-  sidebar.classList.add("collapsed");
-  btnOpen.style.display = "inline-flex";
-});
-btnOpen.addEventListener("click", () => {
-  sidebar.classList.remove("collapsed");
-  btnOpen.style.display = "none";
+// ── Botones +/− por sector ────────────────────────────────────────────────────
+
+function renderContadoresSector(restaurante) {
+  const sectores = ["ruta", "galeria", "salon"];
+  sectores.forEach((sector) => {
+    const { filas, cols } = getSectorConfig(restaurante, sector);
+    const filasEl = document.getElementById(`filas-${sector}`);
+    const colsEl  = document.getElementById(`cols-${sector}`);
+    if (filasEl) filasEl.textContent = filas;
+    if (colsEl)  colsEl.textContent  = cols;
+  });
+}
+
+function cambiarGrid(sector, tipo, delta) {
+  const { filas, cols } = getSectorConfig(restauranteActivo, sector);
+  let nuevaFilas = filas;
+  let nuevaCols  = cols;
+
+  if (tipo === "filas") nuevaFilas = Math.max(1, Math.min(8, filas + delta));
+  if (tipo === "cols")  nuevaCols  = Math.max(1, Math.min(8, cols  + delta));
+
+  setSectorConfig(restauranteActivo, sector, nuevaFilas, nuevaCols);
+
+  const zona = document.getElementById(`zona-${sector}`);
+  if (zona) reconstruirZona(zona, sector, nuevaFilas, nuevaCols);
+
+  renderContadoresSector(restauranteActivo);
+  renderMesas(mesasCache);
+}
+
+// Delegar clicks en los controles de sector
+document.getElementById("sectorControls").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-sector][data-tipo][data-delta]");
+  if (!btn) return;
+  cambiarGrid(btn.dataset.sector, btn.dataset.tipo, Number(btn.dataset.delta));
 });
 
 // ── Crear mesa ────────────────────────────────────────────────────────────────
@@ -82,13 +117,14 @@ document.getElementById("btnCrear").addEventListener("click", async () => {
     return;
   }
 
-  const LIMITES = { ruta: 6, galeria: 9, salon: 9 };
+  const { filas, cols } = getSectorConfig(restauranteActivo, sector);
+  const limite = filas * cols;
   const mesasSector = mesasCache.filter(
     (m) => m.sector === sector && (m.restaurante || 1) === restauranteActivo
   );
 
-  if (mesasSector.length >= (LIMITES[sector] || 9)) {
-    toast(`El sector ${sector} está completo`, "warning");
+  if (mesasSector.length >= limite) {
+    toast(`Sector ${sector} lleno (${limite} celdas). Agregá más filas/columnas.`, "warning");
     return;
   }
 

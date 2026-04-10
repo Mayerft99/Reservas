@@ -18,9 +18,10 @@
       <span class="brand-dot"></span>
       <span class="brand-name">Reservas <em>PRO</em></span>
     </div>
-    <button class="toggle-sidebar" id="toggleSidebar" title="Ocultar panel">‹</button>
+    <button class="toggle-sidebar" id="toggleSidebar">‹</button>
   </div>
 
+  <!-- Restaurante -->
   <section class="sidebar-section">
     <p class="section-label">Restaurante</p>
     <div class="restaurante-tabs" id="restauranteTabs">
@@ -29,6 +30,7 @@
     </div>
   </section>
 
+  <!-- Nueva mesa -->
   <section class="sidebar-section">
     <p class="section-label">Nueva mesa</p>
     <div class="form-group">
@@ -42,11 +44,65 @@
       </select>
     </div>
     <div class="form-group">
-      <input type="number" id="inputCapacidad" placeholder="Capacidad (personas)" min="1" max="20" value="4">
+      <input type="number" id="inputCapacidad" placeholder="Capacidad" min="1" max="20" value="4">
     </div>
     <button class="btn btn-primary" id="btnCrear">+ Agregar mesa</button>
   </section>
 
+  <!-- Controles de grilla por sector -->
+  <section class="sidebar-section" id="sectorControls">
+    <p class="section-label">Grilla por sector</p>
+
+    <div class="sector-ctrl">
+      <span class="sector-ctrl-nombre">Ruta</span>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Filas</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="-1">−</button>
+        <span class="grid-val" id="filas-ruta">2</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="1">+</button>
+      </div>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Cols</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="-1">−</button>
+        <span class="grid-val" id="cols-ruta">3</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="1">+</button>
+      </div>
+    </div>
+
+    <div class="sector-ctrl">
+      <span class="sector-ctrl-nombre">Galería</span>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Filas</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="-1">−</button>
+        <span class="grid-val" id="filas-galeria">3</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="1">+</button>
+      </div>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Cols</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="-1">−</button>
+        <span class="grid-val" id="cols-galeria">3</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="1">+</button>
+      </div>
+    </div>
+
+    <div class="sector-ctrl">
+      <span class="sector-ctrl-nombre">Salón</span>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Filas</span>
+        <button class="grid-btn" data-sector="salon" data-tipo="filas" data-delta="-1">−</button>
+        <span class="grid-val" id="filas-salon">3</span>
+        <button class="grid-btn" data-sector="salon" data-tipo="filas" data-delta="1">+</button>
+      </div>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Cols</span>
+        <button class="grid-btn" data-sector="salon" data-tipo="cols" data-delta="-1">−</button>
+        <span class="grid-val" id="cols-salon">3</span>
+        <button class="grid-btn" data-sector="salon" data-tipo="cols" data-delta="1">+</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leyenda -->
   <section class="sidebar-section">
     <p class="section-label">Leyenda</p>
     <div class="legend">
@@ -56,6 +112,7 @@
     </div>
   </section>
 
+  <!-- Stats -->
   <section class="sidebar-section">
     <p class="section-label">Estado actual</p>
     <div class="stats-grid">
@@ -65,7 +122,7 @@
       </div>
       <div class="stat-card">
         <span class="stat-num espera" id="statEspera">0</span>
-        <span class="stat-label">En espera</span>
+        <span class="stat-label">Espera</span>
       </div>
       <div class="stat-card">
         <span class="stat-num reservada" id="statReservada">0</span>
@@ -81,7 +138,7 @@
     <div class="topbar-info">
       <span class="realtime-badge">● En vivo</span>
       <span class="restaurante-label" id="restauranteLabel">Restaurante 1</span>
-      <span class="topbar-hint">Click para reservar · Clic derecho para eliminar</span>
+      <span class="topbar-hint">Click = reservar · Arrastrar = mover en sector · Der = eliminar</span>
     </div>
     <div class="topbar-user">
       <span class="user-email" id="userEmail"></span>
@@ -106,50 +163,70 @@
   </div>
 </main>
 
-<!-- Modal reserva -->
+<!-- ── Modal reserva (nueva / ver reservada) ─────────────────────────── -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Confirmar reserva — <strong id="modalMesaNombre"></strong></span>
+      <span class="modal-title">Mesa: <strong id="modalMesaNombre"></strong></span>
       <button class="icon-btn" id="modalClose">✕</button>
     </div>
     <div class="modal-body">
-
       <div class="form-group">
         <label class="modal-label">Nombre del cliente</label>
         <input type="text" id="modalInputCliente" placeholder="Ej: García" autocomplete="off">
       </div>
-
       <div class="form-group">
         <label class="modal-label">Teléfono</label>
-        <input type="tel" id="modalInputTel" placeholder="Ej: 70012345" autocomplete="off">
+        <input type="tel" id="modalInputTel" placeholder="Ej: 70012345">
       </div>
-
       <div class="form-group">
-        <label class="modal-label">Cantidad de personas</label>
+        <label class="modal-label">Personas</label>
         <div class="personas-control">
           <button class="personas-btn" id="personasMenos">−</button>
           <span class="personas-num" id="personasNum">2</span>
           <button class="personas-btn" id="personasMas">+</button>
         </div>
       </div>
-
-      <!-- Unir mesas del mismo sector -->
       <div id="unionSection" style="display:none">
-        <label class="modal-label">Unir con otras mesas del sector</label>
+        <label class="modal-label">Unir con mesas del sector</label>
         <div id="unionList" class="union-list"></div>
       </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="modalCancelar">Cancelar</button>
+      <button class="btn btn-accent" id="btnMoverReserva" style="display:none">Mover a otra mesa</button>
       <button class="btn btn-primary" id="modalConfirmar">Confirmar reserva</button>
     </div>
   </div>
 </div>
 
-<div class="toast-container" id="toastContainer"></div>
+<!-- ── Modal mover reserva ───────────────────────────────────────────── -->
+<div class="modal-backdrop" id="modalMoverBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Mover reserva</span>
+      <button class="icon-btn" id="btnMoverClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="mover-origen">Origen: <strong id="moverMesaOrigen"></strong></p>
+      <div class="form-group">
+        <label class="modal-label">Restaurante destino</label>
+        <select id="moverRestSelect">
+          <option value="1">Restaurante 1</option>
+          <option value="2">Restaurante 2</option>
+        </select>
+      </div>
+      <label class="modal-label">Mesa destino (solo libres)</label>
+      <div id="moverListaMesas" class="mover-lista"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnMoverCancelar">Cancelar</button>
+      <button class="btn btn-primary" id="btnMoverConfirm">Confirmar movimiento</button>
+    </div>
+  </div>
+</div>
 
+<div class="toast-container" id="toastContainer"></div>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
