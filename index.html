@@ -8,20 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
+<!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <div class="brand">
-      <span class="brand-dot"></span>
-      <span class="brand-name">Reservas <em>PRO</em></span>
-    </div>
+    <div class="brand"><span class="brand-dot"></span><span class="brand-name">Reservas <em>PRO</em></span></div>
     <button class="toggle-sidebar" id="toggleSidebar">‹</button>
   </div>
 
-  <!-- Restaurante -->
   <section class="sidebar-section">
     <p class="section-label">Restaurante</p>
     <div class="restaurante-tabs" id="restauranteTabs">
@@ -30,61 +28,22 @@
     </div>
   </section>
 
-  <!-- Nueva mesa -->
   <section class="sidebar-section">
     <p class="section-label">Nueva mesa</p>
-    <div class="form-group">
-      <input type="text" id="inputNombre" placeholder="Nombre de la mesa" autocomplete="off">
-    </div>
+    <div class="form-group"><input type="text" id="inputNombre" placeholder="Nombre de la mesa" autocomplete="off"></div>
     <div class="form-group">
       <select id="inputSector">
-        <option value="ruta">Ruta</option>
-        <option value="galeria">Galería</option>
         <option value="salon">Salón</option>
+        <option value="galeria">Galería</option>
+        <option value="ruta">Ruta</option>
       </select>
     </div>
-    <div class="form-group">
-      <input type="number" id="inputCapacidad" placeholder="Capacidad" min="1" max="20" value="4">
-    </div>
+    <div class="form-group"><input type="number" id="inputCapacidad" placeholder="Capacidad" min="1" max="20" value="4"></div>
     <button class="btn btn-primary" id="btnCrear">+ Agregar mesa</button>
   </section>
 
-  <!-- Controles de grilla por sector -->
   <section class="sidebar-section" id="sectorControls">
     <p class="section-label">Grilla por sector</p>
-
-    <div class="sector-ctrl">
-      <span class="sector-ctrl-nombre">Ruta</span>
-      <div class="sector-ctrl-grupo">
-        <span class="sector-ctrl-label">Filas</span>
-        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="-1">−</button>
-        <span class="grid-val" id="filas-ruta">2</span>
-        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="1">+</button>
-      </div>
-      <div class="sector-ctrl-grupo">
-        <span class="sector-ctrl-label">Cols</span>
-        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="-1">−</button>
-        <span class="grid-val" id="cols-ruta">3</span>
-        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="1">+</button>
-      </div>
-    </div>
-
-    <div class="sector-ctrl">
-      <span class="sector-ctrl-nombre">Galería</span>
-      <div class="sector-ctrl-grupo">
-        <span class="sector-ctrl-label">Filas</span>
-        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="-1">−</button>
-        <span class="grid-val" id="filas-galeria">3</span>
-        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="1">+</button>
-      </div>
-      <div class="sector-ctrl-grupo">
-        <span class="sector-ctrl-label">Cols</span>
-        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="-1">−</button>
-        <span class="grid-val" id="cols-galeria">3</span>
-        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="1">+</button>
-      </div>
-    </div>
-
     <div class="sector-ctrl">
       <span class="sector-ctrl-nombre">Salón</span>
       <div class="sector-ctrl-grupo">
@@ -100,9 +59,38 @@
         <button class="grid-btn" data-sector="salon" data-tipo="cols" data-delta="1">+</button>
       </div>
     </div>
+    <div class="sector-ctrl">
+      <span class="sector-ctrl-nombre">Galería</span>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Filas</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="-1">−</button>
+        <span class="grid-val" id="filas-galeria">3</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="filas" data-delta="1">+</button>
+      </div>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Cols</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="-1">−</button>
+        <span class="grid-val" id="cols-galeria">3</span>
+        <button class="grid-btn" data-sector="galeria" data-tipo="cols" data-delta="1">+</button>
+      </div>
+    </div>
+    <div class="sector-ctrl">
+      <span class="sector-ctrl-nombre">Ruta</span>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Filas</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="-1">−</button>
+        <span class="grid-val" id="filas-ruta">2</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="filas" data-delta="1">+</button>
+      </div>
+      <div class="sector-ctrl-grupo">
+        <span class="sector-ctrl-label">Cols</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="-1">−</button>
+        <span class="grid-val" id="cols-ruta">3</span>
+        <button class="grid-btn" data-sector="ruta" data-tipo="cols" data-delta="1">+</button>
+      </div>
+    </div>
   </section>
 
-  <!-- Leyenda -->
   <section class="sidebar-section">
     <p class="section-label">Leyenda</p>
     <div class="legend">
@@ -112,58 +100,80 @@
     </div>
   </section>
 
-  <!-- Stats -->
   <section class="sidebar-section">
     <p class="section-label">Estado actual</p>
     <div class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-num" id="statLibre">0</span>
-        <span class="stat-label">Libres</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num espera" id="statEspera">0</span>
-        <span class="stat-label">Espera</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-num reservada" id="statReservada">0</span>
-        <span class="stat-label">Reservadas</span>
-      </div>
+      <div class="stat-card"><span class="stat-num" id="statLibre">0</span><span class="stat-label">Libres</span></div>
+      <div class="stat-card"><span class="stat-num espera" id="statEspera">0</span><span class="stat-label">Espera</span></div>
+      <div class="stat-card"><span class="stat-num reservada" id="statReservada">0</span><span class="stat-label">Reservadas</span></div>
     </div>
   </section>
 </aside>
 
+<!-- ── MAIN ──────────────────────────────────────────────────────────────── -->
 <main class="main-area">
   <header class="topbar">
     <button class="icon-btn" id="openSidebar" style="display:none">☰</button>
     <div class="topbar-info">
       <span class="realtime-badge">● En vivo</span>
       <span class="restaurante-label" id="restauranteLabel">Restaurante 1</span>
-      <span class="topbar-hint">Click = reservar · Arrastrar = mover en sector · Der = eliminar</span>
     </div>
+
+    <!-- Buscador -->
+    <div class="buscador-wrap">
+      <input type="text" id="buscador" placeholder="Buscar mesa o cliente…">
+      <button class="icon-btn" id="buscadorClear" title="Limpiar">✕</button>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" id="btnDireccion" title="Cambiar dirección del croquis">↕ Vertical</button>
+      <button class="btn btn-ghost btn-sm" id="btnHistorial">📋 Historial</button>
+      <button class="btn btn-ghost btn-sm" id="btnExportar">⬇ Excel</button>
+    </div>
+
     <div class="topbar-user">
       <span class="user-email" id="userEmail"></span>
-      <button class="btn btn-ghost" id="btnLimpiarTodo">Limpiar todo</button>
-      <button class="btn btn-logout" id="btnLogout">Cerrar sesión</button>
+      <button class="btn btn-ghost btn-sm" id="btnLimpiarTodo">Limpiar</button>
+      <button class="btn btn-logout" id="btnLogout">Salir</button>
     </div>
   </header>
 
-  <div class="croquis-wrapper">
+  <!-- Panel exportar -->
+  <div class="export-panel" id="exportPanel">
+    <div class="export-inner">
+      <p class="export-title">Exportar reservas</p>
+      <div class="export-row">
+        <select id="exportTipo" class="export-select">
+          <option value="dia">Por día</option>
+          <option value="evento">Por evento</option>
+        </select>
+        <div class="export-campo">
+          <label id="exportValorLabel" class="export-label">Fecha</label>
+          <input type="date" id="exportValor" class="export-input">
+        </div>
+        <button class="btn btn-primary export-btn" id="btnExportarConfirm">Exportar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Croquis -->
+  <div class="croquis-wrapper" id="croquisWrapper">
     <div class="zona-bloque">
-      <div class="zona-label-ext">RUTA</div>
-      <div class="zona zona-ruta" id="zona-ruta" data-sector="ruta"></div>
+      <div class="zona-label-ext">SALÓN</div>
+      <div class="zona zona-salon" id="zona-salon" data-sector="salon"></div>
     </div>
     <div class="zona-bloque">
       <div class="zona-label-ext">GALERÍA</div>
       <div class="zona zona-galeria" id="zona-galeria" data-sector="galeria"></div>
     </div>
     <div class="zona-bloque">
-      <div class="zona-label-ext">SALÓN</div>
-      <div class="zona zona-salon" id="zona-salon" data-sector="salon"></div>
+      <div class="zona-label-ext">RUTA</div>
+      <div class="zona zona-ruta" id="zona-ruta" data-sector="ruta"></div>
     </div>
   </div>
 </main>
 
-<!-- ── Modal reserva (nueva / ver reservada) ─────────────────────────── -->
+<!-- ── MODAL RESERVA ─────────────────────────────────────────────────────── -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-header">
@@ -171,13 +181,23 @@
       <button class="icon-btn" id="modalClose">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="modal-label">Nombre del cliente</label>
-        <input type="text" id="modalInputCliente" placeholder="Ej: García" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label class="modal-label">Teléfono</label>
-        <input type="tel" id="modalInputTel" placeholder="Ej: 70012345">
+      <div class="modal-grid">
+        <div class="form-group">
+          <label class="modal-label">Cliente</label>
+          <input type="text" id="modalInputCliente" placeholder="Ej: García" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="modal-label">Teléfono</label>
+          <input type="tel" id="modalInputTel" placeholder="70012345">
+        </div>
+        <div class="form-group">
+          <label class="modal-label">Evento</label>
+          <input type="text" id="modalInputEvento" placeholder="Cumpleaños, reunión…">
+        </div>
+        <div class="form-group">
+          <label class="modal-label">Hora de reserva</label>
+          <input type="datetime-local" id="modalInputHora">
+        </div>
       </div>
       <div class="form-group">
         <label class="modal-label">Personas</label>
@@ -194,13 +214,13 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="modalCancelar">Cancelar</button>
-      <button class="btn btn-accent" id="btnMoverReserva" style="display:none">Mover a otra mesa</button>
+      <button class="btn btn-accent" id="btnMoverReserva" style="display:none">↗ Mover</button>
       <button class="btn btn-primary" id="modalConfirmar">Confirmar reserva</button>
     </div>
   </div>
 </div>
 
-<!-- ── Modal mover reserva ───────────────────────────────────────────── -->
+<!-- ── MODAL MOVER ───────────────────────────────────────────────────────── -->
 <div class="modal-backdrop" id="modalMoverBackdrop">
   <div class="modal">
     <div class="modal-header">
@@ -216,7 +236,7 @@
           <option value="2">Restaurante 2</option>
         </select>
       </div>
-      <label class="modal-label">Mesa destino (solo libres)</label>
+      <label class="modal-label">Mesa libre destino</label>
       <div id="moverListaMesas" class="mover-lista"></div>
     </div>
     <div class="modal-footer">
@@ -224,6 +244,16 @@
       <button class="btn btn-primary" id="btnMoverConfirm">Confirmar movimiento</button>
     </div>
   </div>
+</div>
+
+<!-- ── PANEL HISTORIAL ───────────────────────────────────────────────────── -->
+<div class="historial-panel" id="historialPanel">
+  <div class="historial-header">
+    <span class="historial-title">📋 Historial de eventos</span>
+    <input type="text" id="historialSearch" placeholder="Buscar por cliente, mesa, evento…" class="historial-search">
+    <button class="icon-btn" id="historialClose">✕</button>
+  </div>
+  <div class="historial-body" id="historialBody"></div>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
