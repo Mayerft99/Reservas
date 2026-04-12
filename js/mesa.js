@@ -1,8 +1,9 @@
 // ── mesa.js ───────────────────────────────────────────────────────────────────
 
 import {
-  actualizarEstado, eliminarMesa, crearReserva, actualizarSlot,
-  getSectorConfig, verificarDuplicado, registrarHistorial,
+  actualizarEstado, eliminarMesa, crearReserva,
+  actualizarSlot, getSectorConfig,
+  verificarDuplicado, registrarHistorial,
 } from "./db.js";
 import { toast, abrirModalReserva, abrirModalReservada, abrirModalMover } from "./ui.js";
 
