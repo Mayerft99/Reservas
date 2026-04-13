@@ -2,10 +2,11 @@
 
 import {
   fetchMesas, crearMesa, suscribirCambios,
-  iniciarGuardiaAuth, obtenerUsuario, logout,
+  iniciarGuardiaAuth, logout,
   eliminarMesa, getSectorConfig, setSectorConfig,
   fetchConfigSectores, getCroquisDir, setCroquisDir,
   fetchHistorial, fetchReservas,
+  notificarCambioMesas, notificarCambioConfig,
 } from "./db.js";
 import {
   renderMesas, setUserId, setUserEmail, setRestauranteActivo,
@@ -15,9 +16,7 @@ import { actualizarRefMesas, iniciarAutoLiberar } from "./autoLiberar.js";
 import { toast, mostrarHistorial, setBuscadorCallback } from "./ui.js";
 import { exportarExcel } from "./export.js";
 
-// ── Auth — DEBE ser lo primero, bloquea hasta tener sesión ───────────────────
-// iniciarGuardiaAuth() espera el evento INITIAL_SESSION de Supabase.
-// Si no hay sesión redirige automáticamente a login.html.
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
 const usuarioAuth = await iniciarGuardiaAuth();
 
@@ -36,23 +35,7 @@ let mesasCache        = [];
 let reservasCache     = [];
 let restauranteActivo = 1;
 
-// ── Inicializar croquis (carga config desde Supabase) ─────────────────────────
-
-async function inicializarApp() {
-  // Cargar config de sectores desde Supabase para este restaurante
-  await fetchConfigSectores(1);
-  await fetchConfigSectores(2);
-
-  // Dirección del croquis
-  const dir = await getCroquisDir();
-  aplicarDireccionCroquis(dir);
-
-  inicializarCroquis(restauranteActivo);
-  renderContadoresSector(restauranteActivo);
-  await cargar();
-}
-
-// ── Carga de datos ────────────────────────────────────────────────────────────
+// ── Carga ─────────────────────────────────────────────────────────────────────
 
 async function cargar() {
   try {
@@ -66,20 +49,34 @@ async function cargar() {
   }
 }
 
-// ── Realtime — maneja tanto mesas como config ─────────────────────────────────
+async function recargarConfig() {
+  await fetchConfigSectores(restauranteActivo);
+  renderContadoresSector(restauranteActivo);
+  inicializarCroquis(restauranteActivo);
+  renderMesas(mesasCache);
+}
 
-suscribirCambios(async (tipo) => {
-  if (tipo === "mesas") {
-    await cargar();
-  }
-  if (tipo === "config") {
-    // Recargar config de sectores y reconstruir croquis
-    await fetchConfigSectores(restauranteActivo);
-    renderContadoresSector(restauranteActivo);
-    inicializarCroquis(restauranteActivo);
-    renderMesas(mesasCache);
-  }
-});
+// ── Inicializar ───────────────────────────────────────────────────────────────
+
+async function inicializarApp() {
+  await fetchConfigSectores(1);
+  await fetchConfigSectores(2);
+
+  const dir = await getCroquisDir();
+  aplicarDireccionCroquis(dir);
+
+  inicializarCroquis(restauranteActivo);
+  renderContadoresSector(restauranteActivo);
+
+  // Suscribir DESPUÉS de tener todo listo
+  suscribirCambios(
+    () => cargar(),          // callback mesas
+    () => recargarConfig()   // callback config
+  );
+
+  await cargar();
+  iniciarAutoLiberar();
+}
 
 // ── Dirección croquis ─────────────────────────────────────────────────────────
 
@@ -93,10 +90,10 @@ function aplicarDireccionCroquis(dir) {
 
 document.getElementById("btnDireccion").addEventListener("click", async () => {
   const wrapper = document.getElementById("croquisWrapper");
-  const esVertical = wrapper.classList.contains("vertical");
-  const nuevo = esVertical ? "horizontal" : "vertical";
+  const nuevo = wrapper.classList.contains("vertical") ? "horizontal" : "vertical";
   aplicarDireccionCroquis(nuevo);
   await setCroquisDir(nuevo);
+  await notificarCambioConfig();
 });
 
 // ── Selector restaurante ──────────────────────────────────────────────────────
@@ -120,8 +117,20 @@ document.getElementById("restauranteTabs").addEventListener("click", async (e) =
 const sidebar   = document.getElementById("sidebar");
 const btnToggle = document.getElementById("toggleSidebar");
 const btnOpen   = document.getElementById("openSidebar");
-btnToggle.addEventListener("click", () => { sidebar.classList.add("collapsed"); btnOpen.style.display = "inline-flex"; });
-btnOpen.addEventListener("click",   () => { sidebar.classList.remove("collapsed"); btnOpen.style.display = "none"; });
+const overlay   = document.getElementById("sidebarOverlay");
+
+function abrirSidebar() {
+  sidebar.classList.remove("collapsed");
+  if (overlay) overlay.classList.add("visible");
+}
+function cerrarSidebar() {
+  sidebar.classList.add("collapsed");
+  if (overlay) overlay.classList.remove("visible");
+}
+
+btnToggle.addEventListener("click", cerrarSidebar);
+btnOpen.addEventListener("click", abrirSidebar);
+overlay?.addEventListener("click", cerrarSidebar);
 
 // ── Controles grilla ──────────────────────────────────────────────────────────
 
@@ -131,7 +140,7 @@ function renderContadoresSector(rest) {
     const fEl = document.getElementById(`filas-${sector}`);
     const cEl = document.getElementById(`cols-${sector}`);
     if (fEl) fEl.textContent = filas;
-    if (cEl) cEl.textContent  = cols;
+    if (cEl) cEl.textContent = cols;
   });
 }
 
@@ -140,14 +149,12 @@ document.getElementById("sectorControls").addEventListener("click", async (e) =>
   if (!btn) return;
   const { sector, tipo, delta } = btn.dataset;
   const { filas, cols } = getSectorConfig(restauranteActivo, sector);
-  let nf = filas, nc = cols;
-  if (tipo === "filas") nf = Math.max(1, Math.min(8, filas + Number(delta)));
-  if (tipo === "cols")  nc = Math.max(1, Math.min(8, cols  + Number(delta)));
+  let nf = tipo === "filas" ? Math.max(1, Math.min(8, filas + Number(delta))) : filas;
+  let nc = tipo === "cols"  ? Math.max(1, Math.min(8, cols  + Number(delta))) : cols;
 
-  // Guardar en Supabase (se propaga vía realtime a otros dispositivos)
   await setSectorConfig(restauranteActivo, sector, nf, nc);
+  await notificarCambioConfig(); // notificar a todos los dispositivos
 
-  // Actualizar local inmediatamente sin esperar realtime
   const zona = document.getElementById(`zona-${sector}`);
   if (zona) reconstruirZona(zona, sector, nf, nc);
   renderContadoresSector(restauranteActivo);
@@ -182,7 +189,8 @@ document.getElementById("btnCrear").addEventListener("click", async () => {
   try {
     await crearMesa({ nombre, sector, capacidad, slot: slotLibre, restaurante: restauranteActivo });
     document.getElementById("inputNombre").value = "";
-    // No hace falta llamar cargar() — el realtime lo hace automáticamente
+    // Notificar a todos los dispositivos conectados
+    await notificarCambioMesas();
     toast(`Mesa "${nombre}" creada`, "success");
   } catch (err) {
     toast("Error al crear mesa", "danger");
@@ -202,6 +210,7 @@ document.getElementById("btnLimpiarTodo").addEventListener("click", async () => 
   for (const m of mesasCache.filter(m => (m.restaurante || 1) === restauranteActivo)) {
     await eliminarMesa(m.id);
   }
+  await notificarCambioMesas();
   toast(`Restaurante ${restauranteActivo} limpiado`, "info");
 });
 
@@ -247,10 +256,6 @@ document.getElementById("exportTipo").addEventListener("change", (e) => {
     input.placeholder = "Ej: Cumpleaños García";
   }
 });
-
-// ── Auto-liberar ──────────────────────────────────────────────────────────────
-
-iniciarAutoLiberar();
 
 // ── Arrancar ──────────────────────────────────────────────────────────────────
 
