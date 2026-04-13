@@ -117,20 +117,29 @@ document.getElementById("restauranteTabs").addEventListener("click", async (e) =
 const sidebar   = document.getElementById("sidebar");
 const btnToggle = document.getElementById("toggleSidebar");
 const btnOpen   = document.getElementById("openSidebar");
-const overlay   = document.getElementById("sidebarOverlay");
 
-function abrirSidebar() {
-  sidebar.classList.remove("collapsed");
-  if (overlay) overlay.classList.add("visible");
-}
-function cerrarSidebar() {
+btnToggle.addEventListener("click", () => {
   sidebar.classList.add("collapsed");
-  if (overlay) overlay.classList.remove("visible");
-}
-
-btnToggle.addEventListener("click", cerrarSidebar);
-btnOpen.addEventListener("click", abrirSidebar);
-overlay?.addEventListener("click", cerrarSidebar);
+  sidebar.classList.remove("open-mobile");
+  btnOpen.style.display = "inline-flex";
+  document.getElementById("sidebarOverlay")?.classList.remove("visible");
+});
+btnOpen.addEventListener("click", () => {
+  sidebar.classList.remove("collapsed");
+  sidebar.classList.add("open-mobile");
+  btnOpen.style.display = "none";
+  // En móvil mostrar overlay
+  if (window.innerWidth <= 640) {
+    document.getElementById("sidebarOverlay")?.classList.add("visible");
+  }
+});
+// Cerrar sidebar al tocar el overlay en móvil
+document.getElementById("sidebarOverlay")?.addEventListener("click", () => {
+  sidebar.classList.add("collapsed");
+  sidebar.classList.remove("open-mobile");
+  btnOpen.style.display = "inline-flex";
+  document.getElementById("sidebarOverlay")?.classList.remove("visible");
+});
 
 // ── Controles grilla ──────────────────────────────────────────────────────────
 
